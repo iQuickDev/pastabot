@@ -1,0 +1,127 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE PASTA EVENT - Invitation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+        body
+        {
+            background: #36393f;
+            font-family: 'Open Sans', sans-serif;
+            text-align: center;
+        }
+
+        #ticket
+        {
+            margin: auto;
+            margin-top: 15vh;
+            width: 600px;
+            height: 200px;
+            background-image: linear-gradient(45deg, #02fd8c, #07f8d0);
+            border-radius: 10px;
+        }
+
+        #title
+        {
+            padding: 5px;
+        }
+
+        #desc
+        {
+            margin-top: -20px;
+        }
+
+        #inviter
+        {
+            font-size: 1.4rem;
+            color: #008cff;
+        }
+        
+        #invitee
+        {
+            font-size: 1.4rem;
+            color: #008cff;
+        }
+
+        #time
+        {
+            margin-top: -10px;
+        }
+
+        #eventname
+        {
+            margin-top: -20px;
+            color: #bf00ff;
+        }
+
+        #actions button
+        {
+            transition: .5s;
+            background-color: #5865f2;
+            border: none;
+            border-radius: 5px;
+            width: 200px;
+            height: 50px;
+            margin: 50px 4rem 0px 4rem;
+            font-size: 1.2rem;
+        }
+
+        #download:hover
+        {
+            transition: .5s;
+            transform: scale(1.15);
+        }
+
+        #copy:hover
+        {
+            transition: .5s;
+            transform: scale(1.15);
+        }
+
+        #titletop
+        {
+            color: white;
+            font-weight: 900;
+            font-size: 3rem;
+        }
+
+        #footer
+        {
+            background: #303030;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            left: 0;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .copyrightholder
+        {
+            color: #bf00ff;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1 id="titletop">YOUR INVITATION IS READY</h1>
+    </div>
+    <div id="ticket">
+        <h1 id="title"><b>You have received an invitation</b></h1>
+        <h3 id="desc"><span id="inviter">iQuick#0541</span> has invited you to participate to</h3>
+        <h2 id="eventname">THE PASTA EVENT</h2>
+        <h3 id="info">this ticket is only valid for the user <span id="invitee">iQuick#0541</span></h3>
+        <h4 id="time">starts at: <b id="datetime">03/10/2021 - 00:00 (GMT)</b> | Ticket ID: <b id="ticketid">0</b></h4>
+    </div>
+    <div id="actions">
+        <button id="download" onclick="javascript:window.location.href='download.html'">Download</button>
+        <button id="copy">Copy</button>
+    </div>
+
+    <div id="footer">
+        <h1 id="footertext">Copyright © 2021 by <span class="copyrightholder">iQuick</span> &amp; <span class="copyrightholder">THE PASTA EVENT</span></h1>
+    </div>
+
+</body></html>

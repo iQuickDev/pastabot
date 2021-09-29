@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+
+        h1
+        {
+            margin-top: 0;
+        }
+
+        body
+        {
+            text-align: center;
+            font-family: 'Open Sans', sans-serif;
+            padding: 0;
+            margin: 0;
+        }
+
+        #ticket
+        {
+            width: 600px;
+            height: 200px;
+            background-image: linear-gradient(45deg, #02fd8c, #07f8d0);
+            border-radius: 10px;
+        }
+
+        #title
+        {
+            padding: 5px;
+        }
+
+        #desc
+        {
+            margin-top: -20px;
+        }
+
+        #inviter
+        {
+            font-size: 1.4rem;
+            color: #008cff;
+        }
+        
+        #invitee
+        {
+            font-size: 1.4rem;
+            color: #008cff;
+        }
+
+        #time
+        {
+            margin-top: -10px;
+        }
+
+        #eventname
+        {
+            margin-top: -20px;
+            color: #bf00ff;
+        }
+
+    </style>
+    <script src="domtoimg.js"></script>
+    <script src="FileSaver.js"></script>
+</head>
+<body>
+    <div id="ticket">
+        <h1 id="title"><b>You have received an invitation</b></h1>
+        <h3 id="desc"><span id="inviter">test</span> has invited you to participate to</h3>
+        <h2 id="eventname">THE PASTA EVENT</h2>
+        <h3 id="info">this ticket is only valid for the user <span id="invitee">test</span></h3>
+        <h4 id="time">starts at: <b id="datetime">03/10/2021 - 00:00 GMT</b> | Ticket ID: <b id="ticketid">test</b></h4>
+    </div>
+
+    <script>
+        window.addEventListener("load", () => {
+            domtoimage.toBlob(document.getElementById('ticket'))
+            .then((blob) =>
+            {
+                window.saveAs(blob, 'invitation.png')
+            })
+        })
+    </script>
+</body>
+</html>
