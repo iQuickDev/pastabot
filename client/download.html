@@ -77,11 +77,35 @@
 
     <script>
         window.addEventListener("load", () => {
-            domtoimage.toBlob(document.getElementById('ticket'))
-            .then((blob) =>
-            {
-                window.saveAs(blob, 'invitation.png')
-            })
+
+            var inviter = document.querySelector("#inviter")
+            var invitee = document.querySelector("#invitee")
+            var datetime = document.querySelector("#datetime")
+            var ticketid = document.querySelector("#ticketid")
+
+            inviter.innerHTML = localStorage.getItem("inviter")
+            invitee.innerHTML = localStorage.getItem("invitee")
+            datetime.innerHTML = localStorage.getItem("datetime")
+            ticketid.innerHTML = localStorage.getItem("ticketid")
+
+            if (localStorage.getItem("copy") == 0 || localStorage.getItem("copy") == undefined)
+            {                    
+                localStorage.removeItem("copy")
+                domtoimage.toBlob(document.querySelector('#ticket'))
+                .then((blob) =>
+                {
+                    window.saveAs(blob, 'invitation.png')
+                })
+            }
+            // else
+            // {
+            //     localStorage.removeItem("copy")
+            //     domtoimage.toBlob(document.querySelector('#ticket'))
+            //     .then((blob) =>
+            //     {
+            //         navigator.clipboard.write([new ClipboardItem({'image/png': blob})])
+            //     })
+            // }
         })
     </script>
 </body>

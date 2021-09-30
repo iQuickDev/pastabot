@@ -9,18 +9,35 @@ const jsdom = require("jsdom")
 const { jsonfy } = require("booru/dist/Utils")
 const jsonformatter = require("json-stringify-pretty-compact")
 
-
-const dom = jsdom.JSDOM.fromFile("./invitation.html")
+var ticketid = 0;
+const dom = jsdom.JSDOM.fromFile("client/invitation.html")
 
 const hostname = "0.0.0.0"
 const port = 80
-var responseData = fs.readFileSync("./newinvitation.html")
 
 const server = http.createServer((req, res) => {
-    res.statusCode = 200
-    res.setHeader("Content-Type", "text/html")
-    res.end(responseData)
+    const route = new URL(req.url, 'http://' + req.headers.host)
+    let path = route.pathname
 
+    if (!path.includes("."))
+        path += ".html"
+
+    fs.readFile('client/' + path, null, (e, data) =>
+    {
+        if (e)
+        {
+            console.log(e)
+            res.statusCode = 404
+            res.end()
+        }
+        else
+        {
+            res.write(data)
+            res.end()
+        }
+    })
+
+    console.log("route: " + route + "path: " + path)
 }).listen(port, hostname)
 
 const client = new Discord.Client({
@@ -46,7 +63,7 @@ client.on("ready", () => {
     console.log("Pasta is ready")
 })
 
-function AddUserToLocalDatabase(inviter, invitee, datetime, ticketid)
+function AddUserToLocalDatabase(inviter, invitee, datetime)
 {
     var parsedDB = []
     var newInvitation = {"inviter": inviter, "invitee": invitee, "date": datetime, "ticketid": ticketid}
@@ -55,8 +72,13 @@ function AddUserToLocalDatabase(inviter, invitee, datetime, ticketid)
     {
         if (err) return
         parsedDB = JSON.parse(data)
+
+        if (newInvitation.ticketid == 0 && parsedDB.users.length != 0)
+        newInvitation.ticketid = parsedDB.users.length
+
         parsedDB.users.push(newInvitation)
-        parsedDB.ticketcount += 1;
+        ticketid = parsedDB.users.length
+        parsedDB.tickets = ticketid
 
         fs.writeFile("./database.json", jsonformatter(parsedDB), function(err) {
             if (err) return
@@ -65,8 +87,8 @@ function AddUserToLocalDatabase(inviter, invitee, datetime, ticketid)
 }
 
 client.on("messageCreate", async message => {
-    try
-     {
+    // try
+    //  {
         if (!message.content.startsWith(config.prefix) || message.author.bot) return
 
         let guildQueue = client.player.getQueue(message.guild.id)
@@ -78,26 +100,22 @@ client.on("messageCreate", async message => {
         switch (command)
         {
             case "addinvite":
-
                 var document = (await dom).window.document
                 
                 var inviter = `${message.author.username}#${message.author.discriminator}`
                 var invitee = `${args[0]}`
                 var datetime = `${args[1]} - ${args[2]} (${args[3]})`
-                var ticketid = `${database.ticketcount}`
                 
-                AddUserToLocalDatabase(inviter, invitee, datetime, ticketid)
+                AddUserToLocalDatabase(inviter, invitee, datetime)
 
                 document.querySelector("#inviter").innerHTML = inviter
                 document.querySelector("#invitee").innerHTML = invitee
                 document.querySelector("#datetime").innerHTML = datetime
-                document.querySelector("#ticketid").innerHTML = ticketid
+                document.querySelector("#ticketid").innerHTML = ticketid.toString()
 
-                fs.writeFileSync("newinvitation.html", (await dom).window.document.documentElement.outerHTML)
+                fs.writeFileSync("client/newinvitation.html", (await dom).window.document.documentElement.outerHTML)
                 
-                responseData = fs.readFileSync("./newinvitation.html")
-
-                message.channel.send("The invite has been generated at the following url: " + "http://quicksense.ddns.net/newinvitation.html")
+                message.channel.send("Invitation successfully generated: " + "http://quicksense.ddns.net/newinvitation")
                 break
 
             case "verify":
@@ -233,9 +251,9 @@ client.on("messageCreate", async message => {
                 guildQueue.shuffle()
                 break
         }
-     }
-     catch (error)
-     {
-         message.channel.send(error.toString())
-     }
+    //  }
+    //  catch (error)
+    //  {
+    //      message.channel.send(error.toString())
+    //  }
 })
