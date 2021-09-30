@@ -1,6 +1,71 @@
 {
-  "tickets": 5,
+  "tickets": 11,
   "users": [
-
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "iQuick#0502",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 0
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "Edvard#9100",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 1
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "butshin#2302",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 2
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "leroi#5736",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 3
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "F3kFak#8513",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 4
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "cream#9000",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 5
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "ramen#2169",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 6
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "Genzai#0109",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 7
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "Fishie ded#8824",
+      "date": " 03/10/2021 00:00 GMT",
+      "ticketid": 8
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "bischeroasciutto#1973",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 9
+    },
+    {
+      "inviter": "iQuick#0541",
+      "invitee": "Aliceboschetti#1179",
+      "date": "03/10/2021 - 00:00 (GMT)",
+      "ticketid": 10
+    }
   ]
 }

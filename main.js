@@ -6,7 +6,6 @@ const {Player, RepeatMode} = require("discord-music-player")
 const http = require("http")
 const fs = require("fs")
 const jsdom = require("jsdom")
-const { jsonfy } = require("booru/dist/Utils")
 const jsonformatter = require("json-stringify-pretty-compact")
 
 var ticketid = 0;
@@ -36,8 +35,6 @@ const server = http.createServer((req, res) => {
             res.end()
         }
     })
-
-    console.log("route: " + route + "path: " + path)
 }).listen(port, hostname)
 
 const client = new Discord.Client({
@@ -87,24 +84,36 @@ function AddUserToLocalDatabase(inviter, invitee, datetime)
 }
 
 client.on("messageCreate", async message => {
-    // try
-    //  {
+     try
+      {
         if (!message.content.startsWith(config.prefix) || message.author.bot) return
 
         let guildQueue = client.player.getQueue(message.guild.id)
 
-        const args = message.content.slice(config.prefix.length).split(/ +/)
+        const args = message.content.slice(config.prefix.length).replace(" ", " ").split(/ +/)
         const command = args.shift().toLowerCase()
         const allArgs = args.join().replaceAll(","," ").replace(/<.*>/gm, "")
 
         switch (command)
         {
             case "addinvite":
+                if (message.author.id != "295310535107280908")
+                {
+                    message.channel.send("Only the **Pasta Cooker** can generate invitations")
+                    return
+                }
+
                 var document = (await dom).window.document
                 
                 var inviter = `${message.author.username}#${message.author.discriminator}`
                 var invitee = `${args[0]}`
                 var datetime = `${args[1]} - ${args[2]} (${args[3]})`
+
+                if (allArgs.startsWith('"') || allArgs.startsWith("'"))
+                {
+                    invitee = allArgs.split(/"(.*?)"/gm)[1];
+                    datetime = allArgs.split(/"(.*?)"/gm)[2];
+                }
                 
                 AddUserToLocalDatabase(inviter, invitee, datetime)
 
@@ -251,9 +260,9 @@ client.on("messageCreate", async message => {
                 guildQueue.shuffle()
                 break
         }
-    //  }
-    //  catch (error)
-    //  {
-    //      message.channel.send(error.toString())
-    //  }
+     }
+     catch (error)
+     {
+         message.channel.send(error.toString())
+     }
 })
