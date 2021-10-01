@@ -152,8 +152,8 @@ client.on("messageCreate", async message => {
                     await new Promise(resolve => setTimeout(resolve, 1000))
                     message.channel.send(verifyprefix + "Scanning database for invites corresponding to the id...")
                     await new Promise(resolve => setTimeout(resolve, 1000))
-                    
-                    for (var i = 0; i < database.users.length; i++)
+
+                    for (var i = 0; i < ticketid; i++)
                     {
                         if (database.users[i].invitee == username)
                         {
