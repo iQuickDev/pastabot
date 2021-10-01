@@ -8,7 +8,8 @@ const fs = require("fs")
 const jsdom = require("jsdom")
 const jsonformatter = require("json-stringify-pretty-compact")
 
-var ticketid = 0;
+var ticketid
+
 const dom = jsdom.JSDOM.fromFile("client/invitation.html")
 
 const hostname = "0.0.0.0"
@@ -57,8 +58,21 @@ client.login(config.token)
 
 client.on("ready", () => {
     client.user.setActivity("Pasta Cooking", {type: "COMPETING"})
+    LoadTicketID()
     console.log("Pasta is ready")
 })
+
+function LoadTicketID()
+{
+    let tempDB = []
+
+    fs.readFile("./database.json", function (err, data)
+    {
+        if (err) return
+        tempDB = JSON.parse(data)
+        ticketid = tempDB.tickets
+    })
+}
 
 function AddUserToLocalDatabase(inviter, invitee, datetime)
 {
@@ -133,11 +147,12 @@ client.on("messageCreate", async message => {
                     let isVerified = false;
                     let participantrole = message.guild.roles.cache.find(role => role.name === "Pasta Admirer");
                     message.channel.send(verifyprefix + "Initializing verification process for **" + message.author.toString() +" **")
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await new Promise(resolve => setTimeout(resolve, 500))
                     message.channel.send(verifyprefix + "Fetched username: " + username)
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 1000))
                     message.channel.send(verifyprefix + "Scanning database for invites corresponding to the id...")
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    
                     for (var i = 0; i < database.users.length; i++)
                     {
                         if (database.users[i].invitee == username)
