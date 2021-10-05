@@ -1,16 +1,16 @@
 const Discord = require("discord.js")
 const config = require("./config.json")
 const database = require("./database.json")
-const {Client, Intents, Permissions} = require("discord.js")
+const dbmanager = require("./dbmanager")
+const webmanager = require("./webmanager")
+const {Permissions} = require("discord.js")
 const {Player, RepeatMode} = require("discord-music-player")
 const http = require("http")
 const fs = require("fs")
-const jsdom = require("jsdom")
-const jsonformatter = require("json-stringify-pretty-compact")
 
+var admin = "295310535107280908"
 var ticketid
-
-const dom = jsdom.JSDOM.fromFile("client/invitation.html")
+var dataBase = []
 
 const hostname = "0.0.0.0"
 const port = 80
@@ -38,6 +38,9 @@ const server = http.createServer((req, res) => {
     })
 }).listen(port, hostname)
 
+dataBase = dbmanager.ParseDB()
+ticketid = dataBase.users.length
+
 const client = new Discord.Client({
     restTimeOffset: 0,
     allowedMentions: {
@@ -58,44 +61,8 @@ client.login(config.token)
 
 client.on("ready", () => {
     client.user.setActivity("Pasta Cooking", {type: "COMPETING"})
-    LoadTicketID()
     console.log("Pasta is ready")
 })
-
-function LoadTicketID()
-{
-    let tempDB = []
-
-    fs.readFile("./database.json", function (err, data)
-    {
-        if (err) return
-        tempDB = JSON.parse(data)
-        ticketid = tempDB.tickets
-    })
-}
-
-function AddUserToLocalDatabase(inviter, invitee, datetime)
-{
-    var parsedDB = []
-    var newInvitation = {"inviter": inviter, "invitee": invitee, "date": datetime, "ticketid": ticketid}
-
-    fs.readFile("./database.json", function (err, data)
-    {
-        if (err) return
-        parsedDB = JSON.parse(data)
-
-        if (newInvitation.ticketid == 0 && parsedDB.users.length != 0)
-        newInvitation.ticketid = parsedDB.users.length
-
-        parsedDB.users.push(newInvitation)
-        ticketid = parsedDB.users.length
-        parsedDB.tickets = ticketid
-
-        fs.writeFile("./database.json", jsonformatter(parsedDB), function(err) {
-            if (err) return
-        })
-    })
-}
 
 client.on("messageCreate", async message => {
      try
@@ -110,34 +77,68 @@ client.on("messageCreate", async message => {
 
         switch (command)
         {
+            case "seteventdate":
+                if (message.author.id != admin)
+                {
+                    message.channel.send("Only the **Pasta Cooker** can change the event date")
+                    return
+                }
+
+                if (dbmanager.SetEventDate(args[0], args[1], args[2]))
+                message.channel.send("The date has been updated correctly")
+                else
+                message.channel.send("The given date is invalid, the correct date format is: dd/mm/yyyy hh:mm timezone")
+                break
+
+            case "checkinvite":
+                let user = dbmanager.QueryUser(args[0], ticketid)
+                if (user != undefined)
+                message.channel.send(`**FETCHED USER - ${user.invitee}**\n**Inviter:** ${user.inviter}\n**Date/Time:** ${user.date}\n**Invitation ID:** ${user.ticketid}`)
+                else
+                message.channel.send("The given user doesn't have any invitation")
+                break
+
+            case "cleardb":
+                if (message.author.id != admin)
+                {
+                    message.channel.send("Only the **Pasta Cooker** can clear the database")
+                    return
+                }
+
+                ticketid = dbmanager.ClearDB()
+                break
+
+            case "removeinvite":
+                if (message.author.id != admin)
+                {
+                    message.channel.send("Only the **Pasta Cooker** can remove invitations")
+                    return
+                }
+
+                ticketid = dbmanager.RemoveUser(args[0], ticketid)
+                break
+
             case "addinvite":
-                if (message.author.id != "295310535107280908")
+                if (message.author.id != admin)
                 {
                     message.channel.send("Only the **Pasta Cooker** can generate invitations")
                     return
                 }
-
-                var document = (await dom).window.document
                 
                 var inviter = `${message.author.username}#${message.author.discriminator}`
                 var invitee = `${args[0]}`
-                var datetime = `${args[1]} - ${args[2]} (${args[3]})`
+                var datetime = dataBase.eventdate
 
-                if (allArgs.startsWith('"') || allArgs.startsWith("'"))
+                if (allArgs.startsWith('"') || allArgs.startsWith("'")) // regex to not split the args if name has one or more spaces
                 {
                     invitee = allArgs.split(/"(.*?)"/gm)[1];
                     datetime = allArgs.split(/"(.*?)"/gm)[2];
                 }
                 
-                AddUserToLocalDatabase(inviter, invitee, datetime)
+                ticketid = dbmanager.AddUser(inviter, invitee, datetime, ticketid)
 
-                document.querySelector("#inviter").innerHTML = inviter
-                document.querySelector("#invitee").innerHTML = invitee
-                document.querySelector("#datetime").innerHTML = datetime
-                document.querySelector("#ticketid").innerHTML = ticketid.toString()
+                webmanager.FillInvitationFile(inviter, invitee, datetime, ticketid)
 
-                fs.writeFileSync("client/newinvitation.html", (await dom).window.document.documentElement.outerHTML)
-                
                 message.channel.send("Invitation successfully generated: " + "http://quicksense.ddns.net/newinvitation")
                 break
 
@@ -145,12 +146,12 @@ client.on("messageCreate", async message => {
                     let verifyprefix = "[Pasta Verification Service] "
                     let username = `${message.author.username}#${message.author.discriminator}`
                     let isVerified = false;
-                    let participantrole = message.guild.roles.cache.find(role => role.name === "Pasta Admirer");
+                    let participantrole = message.guild.roles.cache.find(role => role.id === "892508397080047657")
                     message.channel.send(verifyprefix + "Initializing verification process for **" + message.author.toString() +" **")
                     await new Promise(resolve => setTimeout(resolve, 500))
                     message.channel.send(verifyprefix + "Fetched username: " + username)
                     await new Promise(resolve => setTimeout(resolve, 1000))
-                    message.channel.send(verifyprefix + "Scanning database for invites corresponding to the id...")
+                    message.channel.send(verifyprefix + "Scanning database for invites corresponding to the username...")
                     await new Promise(resolve => setTimeout(resolve, 1000))
 
                     for (var i = 0; i < ticketid; i++)
@@ -166,11 +167,20 @@ client.on("messageCreate", async message => {
                     }
                     if (!isVerified)
                     {
-                        message.channel.send(verifyprefix + "**"+ message.author.toString() + "** cannot be verified, the user will be kicked in 5 seconds...")
-                        await new Promise(resolve => setTimeout(resolve, 5000))
-                        message.member.send(`You have been kicked from **THE PASTA EVENT** for the following reason: "You are not eligible for the current pasta event"`)
-                        message.member.kick("You are not eligible for the current pasta event")
-                        message.channel.send(verifyprefix + message.author.toString() + " has been kicked")
+                        if (message.guild.me.permissions.has(Permissions.FLAGS.KICK_MEMBERS) && !message.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR))
+                        {
+                            message.channel.send(verifyprefix + "found **0** valid invitations")
+                            message.channel.send(verifyprefix + "**"+ message.author.toString() + "** cannot be verified, the user will be kicked in 5 seconds...")
+                            await new Promise(resolve => setTimeout(resolve, 5000))
+                            message.member.send(`You have been kicked from **THE PASTA EVENT** for the following reason: "You are not eligible for the current pasta event"`)
+                            .then(message.member.kick("You are not eligible for the current pasta event"))
+                            message.channel.send(verifyprefix + message.author.toString() + " has been kicked")
+                        }
+                        else
+                        {
+                            message.channel.send(verifyprefix + "found **0** valid invitations")
+                            message.channel.send(verifyprefix + "**"+ message.author.toString() + "** cannot be verified")
+                        }
                     }
                 break
 
