@@ -1,7 +1,7 @@
 const Discord = require("discord.js")
 const config = require("./config.json")
-const database = require("./database.json")
 const dbmanager = require("./dbmanager")
+const discordmanager = require("./discordmanager")
 const webmanager = require("./webmanager")
 const {Permissions} = require("discord.js")
 const {Player, RepeatMode} = require("discord-music-player")
@@ -10,7 +10,9 @@ const fs = require("fs")
 
 var admin = "295310535107280908"
 var ticketid
+var eventdate
 var dataBase = []
+var admirerRole
 
 const hostname = "0.0.0.0"
 const port = 80
@@ -40,6 +42,7 @@ const server = http.createServer((req, res) => {
 
 dataBase = dbmanager.ParseDB()
 ticketid = dataBase.users.length
+eventdate = dataBase.eventdate
 
 const client = new Discord.Client({
     restTimeOffset: 0,
@@ -60,13 +63,14 @@ client.player = player
 client.login(config.token)
 
 client.on("ready", () => {
-    client.user.setActivity("Pasta Cooking", {type: "COMPETING"})
-    console.log("Pasta is ready")
+    client.user.setActivity("Pizza Baking", {type: "COMPETING"})
+    console.log("Pizza is ready")
 })
 
-client.on("messageCreate", async message => {
-     try
-      {
+client.on("messageCreate", async message =>
+{
+    try
+    {
         if (!message.content.startsWith(config.prefix) || message.author.bot) return
 
         let guildQueue = client.player.getQueue(message.guild.id)
@@ -74,17 +78,46 @@ client.on("messageCreate", async message => {
         const args = message.content.slice(config.prefix.length).replace(" ", " ").split(/ +/)
         const command = args.shift().toLowerCase()
         const allArgs = args.join().replaceAll(","," ").replace(/<.*>/gm, "")
+        admirerRole = message.guild.roles.cache.find(role => role.id == "892508397080047657")
 
         switch (command)
         {
-            case "seteventdate":
+            case "clearchat":
                 if (message.author.id != admin)
                 {
-                    message.channel.send("Only the **Pasta Cooker** can change the event date")
+                    message.channel.send("Only the **Pizza Baker** can clear the chat")
+                    return
+                }
+                
+                discordmanager.Purge(message, args[0])
+                break
+
+            case "inviteslist":
+                message.channel.send("**LIST OF INVITED USERS**\n" + dbmanager.ListInvitees())
+                break
+
+            case "unverifyall":
+                if (message.author.id != admin)
+                {
+                    message.channel.send("Only the **Pizza Baker** can unverify everyone")
                     return
                 }
 
-                if (dbmanager.SetEventDate(args[0], args[1], args[2]))
+                message.guild.members.fetch()
+                message.guild.members.cache.forEach(member => {member.roles.remove(admirerRole)})
+                message.channel.send("All the users have been unverified")
+                break
+
+            case "seteventdate":
+                if (message.author.id != admin)
+                {
+                    message.channel.send("Only the **Pizza Baker** can change the event date")
+                    return
+                }
+
+                eventdate = dbmanager.SetEventDate(args[0], args[1], args[2])
+
+                if (eventdate != false)
                 message.channel.send("The date has been updated correctly")
                 else
                 message.channel.send("The given date is invalid, the correct date format is: dd/mm/yyyy hh:mm timezone")
@@ -101,86 +134,74 @@ client.on("messageCreate", async message => {
             case "cleardb":
                 if (message.author.id != admin)
                 {
-                    message.channel.send("Only the **Pasta Cooker** can clear the database")
+                    message.channel.send("Only the **Pizza Baker** can clear the database")
                     return
                 }
 
                 ticketid = dbmanager.ClearDB()
+                message.channel.send("The database has been cleared successfully")
                 break
 
             case "removeinvite":
                 if (message.author.id != admin)
                 {
-                    message.channel.send("Only the **Pasta Cooker** can remove invitations")
+                    message.channel.send("Only the **Pizza Baker** can remove invitations")
                     return
                 }
 
                 ticketid = dbmanager.RemoveUser(args[0], ticketid)
+                message.channel.send("The invitation for " + args[0] + " has been revoked successfully")
                 break
 
             case "addinvite":
                 if (message.author.id != admin)
                 {
-                    message.channel.send("Only the **Pasta Cooker** can generate invitations")
+                    message.channel.send("Only the **Pizza Baker** can generate invitations")
                     return
                 }
                 
                 var inviter = `${message.author.username}#${message.author.discriminator}`
                 var invitee = `${args[0]}`
-                var datetime = dataBase.eventdate
 
                 if (allArgs.startsWith('"') || allArgs.startsWith("'")) // regex to not split the args if name has one or more spaces
                 {
-                    invitee = allArgs.split(/"(.*?)"/gm)[1];
-                    datetime = allArgs.split(/"(.*?)"/gm)[2];
+                    invitee = allArgs.split(/"(.*?)"/gm)[1]
                 }
                 
-                ticketid = dbmanager.AddUser(inviter, invitee, datetime, ticketid)
+                ticketid = dbmanager.AddUser(inviter, invitee, eventdate, ticketid)
 
-                webmanager.FillInvitationFile(inviter, invitee, datetime, ticketid)
+                webmanager.FillInvitationFile(inviter, invitee, eventdate, ticketid)
 
                 message.channel.send("Invitation successfully generated: " + "http://quicksense.ddns.net/newinvitation")
                 break
 
             case "verify":
-                    let verifyprefix = "[Pasta Verification Service] "
+                    dataBase = dbmanager.ParseDB()
+                    let verifyprefix = "[Pizza Verification Service] "
                     let username = `${message.author.username}#${message.author.discriminator}`
                     let isVerified = false;
-                    let participantrole = message.guild.roles.cache.find(role => role.id === "892508397080047657")
                     message.channel.send(verifyprefix + "Initializing verification process for **" + message.author.toString() +" **")
                     await new Promise(resolve => setTimeout(resolve, 500))
                     message.channel.send(verifyprefix + "Fetched username: " + username)
-                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    await new Promise(resolve => setTimeout(resolve, 500))
                     message.channel.send(verifyprefix + "Scanning database for invites corresponding to the username...")
-                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    await new Promise(resolve => setTimeout(resolve, 500))
 
-                    for (var i = 0; i < ticketid; i++)
+                    for (var i = 0; i < dataBase.users.length; i++)
                     {
-                        if (database.users[i].invitee == username)
+                        if (dataBase.users[i].invitee == username)
                         {
-                            message.channel.send(verifyprefix + "found **1** valid invitation")
+                            message.channel.send(`**FETCHED USER - ${dataBase.users[i].invitee}**\n**Inviter:** ${dataBase.users[i].inviter}\n**Date/Time:** ${dataBase.users[i].date}\n**Invitation ID:** ${dataBase.users[i].ticketid}`)
                             await new Promise(resolve => setTimeout(resolve, 500))
                             message.channel.send(verifyprefix + "**"+ message.author.toString() + "** has been verified and is ready to participate")
-                            message.member.roles.add(participantrole);
+                            message.member.roles.add(admirerRole);
                             isVerified = true;
                         }
                     }
                     if (!isVerified)
                     {
-                        if (message.guild.me.permissions.has(Permissions.FLAGS.KICK_MEMBERS) && !message.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR))
-                        {
-                            message.channel.send(verifyprefix + "found **0** valid invitations")
-                            message.channel.send(verifyprefix + "**"+ message.author.toString() + "** cannot be verified, the user will be kicked in 5 seconds...")
-                            await new Promise(resolve => setTimeout(resolve, 5000))
-                            message.member.send(`You have been kicked from **THE PASTA EVENT** for the following reason: "You are not eligible for the current pasta event"`)
-                            .then(message.member.kick("You are not eligible for the current pasta event"))
-                            message.channel.send(verifyprefix + message.author.toString() + " has been kicked")
-                        }
-                        else
-                        {
-                            message.channel.send(verifyprefix + "found **0** valid invitations")
-                            message.channel.send(verifyprefix + "**"+ message.author.toString() + "** cannot be verified")
-                        }
+                        message.channel.send(verifyprefix + "no valid invitation could be found")
+                        message.channel.send(verifyprefix + "**"+ message.author.toString() + "** cannot be verified")
                     }
                 break
 
@@ -285,9 +306,5 @@ client.on("messageCreate", async message => {
                 guildQueue.shuffle()
                 break
         }
-     }
-     catch (error)
-     {
-         message.channel.send(error.toString())
-     }
+    } catch (error) { message.channel.send(error.toString()) }
 })

@@ -5,6 +5,7 @@ const dom = jsdom.JSDOM.fromFile("client/invitation.html")
 
 async function FillInvitationFile(inviter, invitee, datetime, ticketid)
 {
+    console.log("ticketid in webmanager: " + ticketid)
     var document = (await dom).window.document
 
     document.querySelector("#inviter").innerHTML = inviter

@@ -8,47 +8,47 @@ function ParseDB()
 
 function ClearDB()
 {
-    let newDB = {tickets: 0, users: []}
-    fs.writeFile("./database.json", jsonformatter(newDB), (err) => {if (err) return})
+    let newDB = {tickets: 0, eventdate: "00/00/0000 00:00 GMT", users: []}
+    fs.writeFileSync("./database.json", jsonformatter(newDB))
     return newDB.users.length
+}
+
+function ListInvitees()
+{
+    let userslist = ""
+    let parsedDB = ParseDB()
+
+    for (let i = 0; i < parsedDB.users.length; i++)
+    {
+        userslist += "[" + i + "] " + parsedDB.users[i].invitee + "\n"
+    }
+
+    return userslist
 }
 
 function SetEventDate(date, time, timezone)
 {
-    console.log("date length: " + date.length + "time length: " + time.length + "timezone length: " + timezone.length)
     if (date.length != 10 || !date.includes("/") || time.length != 5 || !time.includes(":") || timezone.length < 1)
         return false
 
-    var completedate = date + " " + time + " (" + timezone + ")"
+    let completedate = date + " " + time + " (" + timezone + ")"
+    let parsedDB = ParseDB()
 
-    var parsedDB = []
+    parsedDB.eventdate = completedate
+    fs.writeFileSync("./database.json", jsonformatter(parsedDB))
 
-    fs.readFile("./database.json", (err, data) =>
-    {
-        if (err) return
-        parsedDB = JSON.parse(data)
-
-        parsedDB.eventdate = completedate
-
-        fs.writeFile("./database.json", jsonformatter(parsedDB), function(err) {
-            if (err) return
-        })
-    })
-
-    return true
+    return completedate
 }
 
 function QueryUser(invitee, ticketid)
 {
-    var tempDB = []
-
-    tempDB = JSON.parse(fs.readFileSync("./database.json"))
+    let parsedDB = ParseDB()
 
     for (let i = 0; i < ticketid; i++)
     {
-        if (tempDB.users[i].invitee == invitee)
+        if (parsedDB.users[i].invitee == invitee)
         {
-            return tempDB.users[i]
+            return parsedDB.users[i]
         }
     }
 }
@@ -56,58 +56,44 @@ function QueryUser(invitee, ticketid)
 function RemoveUser(invitee, ticketid)
 {
     let userToRemove = invitee
-    let parsedDB = []
-
-    fs.readFile("./database.json", (err, data) =>
-    {
-        if (err) return
-        parsedDB = JSON.parse(data)
+    let parsedDB = ParseDB()
         
-        for (let i = 0; i < ticketid; i++)
+    for (let i = 0; i < ticketid; i++)
+    {
+        if (parsedDB.users[i].invitee == userToRemove)
         {
-            if (parsedDB.users[i].invitee == userToRemove)
-            {
-                parsedDB.users[i].invitee += " [DELETED]"
-            }
+            parsedDB.users[i].invitee += " [DELETED]"
         }
+    }
 
-        ticketid = parsedDB.users.length
-        parsedDB.tickets = ticketid
+    ticketid = parsedDB.users.length
+    parsedDB.tickets = ticketid
 
-        fs.writeFile("./database.json", jsonformatter(parsedDB), function(err) {
-            if (err) return
-        })
-    })
+    fs.writeFileSync("./database.json", jsonformatter(parsedDB))
 
     return ticketid
 }
 
 function AddUser(inviter, invitee, datetime, ticketid)
 {
-    var parsedDB = []
-    var newInvitation = {"inviter": inviter, "invitee": invitee, "date": datetime, "ticketid": ticketid}
+    let newInvitation = {"inviter": inviter, "invitee": invitee, "date": datetime, "ticketid": ticketid}
+    let parsedDB = ParseDB()
 
-    fs.readFile("./database.json", (err, data) =>
-    {
-        if (err) return
-        parsedDB = JSON.parse(data)
+    if (newInvitation.ticketid == 0 && parsedDB.users.length != 0)
+    newInvitation.ticketid = parsedDB.users.length
 
-        if (newInvitation.ticketid == 0 && parsedDB.users.length != 0)
-        newInvitation.ticketid = parsedDB.users.length
+    parsedDB.users.push(newInvitation)
+    ticketid = parsedDB.users.length
+    parsedDB.tickets = ticketid
 
-        parsedDB.users.push(newInvitation)
-        ticketid = parsedDB.users.length
-        parsedDB.tickets = ticketid
+    fs.writeFileSync("./database.json", jsonformatter(parsedDB))
 
-        fs.writeFile("./database.json", jsonformatter(parsedDB), function(err) {
-            if (err) return
-        })
-    })
     return ticketid
 }
 
 exports.ParseDB = ParseDB
 exports.ClearDB = ClearDB
+exports.ListInvitees = ListInvitees
 exports.SetEventDate = SetEventDate
 exports.QueryUser = QueryUser
 exports.RemoveUser = RemoveUser

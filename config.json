@@ -1,5 +1,6 @@
 {
-    "token": "",
-    "prefix": "pasta!"
+    "token": "yourtoken",
+    "foodtype": "pizza",
+    "prefix": "pizza!"
 }
 
